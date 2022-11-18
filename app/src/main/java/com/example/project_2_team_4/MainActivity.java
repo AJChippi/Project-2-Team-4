@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnNewGame.setOnClickListener(v -> {
-            Intent intent = new Intent(this, GameActivity.class);
+            Intent intent = new Intent(this, XYZAccelerometer.class);
             startActivity(intent);
         });
     }
