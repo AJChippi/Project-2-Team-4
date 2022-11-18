@@ -37,7 +37,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     float gyroStartingX;
     float gyroStartingY;
     float topSpeed = 0;
-    String[] arrCommands = {"Right", "Left", "Up", "Down"};
+    String[] rightAndLeft = {"Right", "Left"};
+    String[] upAndDown = {"Up", "Down"};
     String strHandGrip;
     String TAG = "MYTAG";
     boolean timerActive = false;
@@ -46,6 +47,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     ArrayList<Float> arlValuesY;
     ArrayList<Float> arlTempValues;
     ArrayList<Float> arlTopSpeeds;
+
+    String strUpAndDown;
 
     //Sensors
     SensorManager sensorManager;
@@ -66,7 +69,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //Get Settings Preferences
         //For now, set things to default
         numOfCommands = 2;
-        strHandGrip = "Right";
+        strHandGrip = "Right HAND";
 
         //Initialize Arraylists
         arlValuesX = new ArrayList<>();
@@ -78,6 +81,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        int upAndDownRandom = (int) (Math.random() * 2);
+        // get the random value of the array
+         strUpAndDown = upAndDown[upAndDownRandom];
+
+        // set the text of the layout
+        txtLayout.setText(strUpAndDown);
+
     }
 
     @Override
@@ -107,44 +118,85 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int i) {}
 
     public void checkPunchY(){
-        if(arlValuesY.size() < 6){
-            return;
-        }
 
-        //Loop through received Y-accelerometer values
-        for(int i = 0; i < arlValuesY.size()-3; i++){
-            //If the next receiving value is greater than the starting Y-value, then
-            //  the punch is initiated
-            if(accStartingY < arlValuesY.get(i+1)){
-                Log.d(TAG, "Punch: " + arlValuesY.get(i));
-                //Record the top speed from the recorded punches, else, add some temporary values
-                if(topSpeed < arlValuesY.get(i))
-                    topSpeed = arlValuesY.get(i);
-                else
-                    arlTempValues.add(arlValuesY.get(i));
-
-                //Arraylist will never be larger than 6, so when reached max size, check
-                //  temporary values against the top speed
-                //If the top speed is larger than any of the temp values, the punch may have
-                //  reached maximum speed and is complete. Grab values
-                if(arlValuesY.size() > 5){
-                    for(int j = 0; j < arlTempValues.size(); j++){
-                        if(arlTempValues.get(j) < topSpeed){
-                            topSpeed -= accStartingY;
-                            arlTopSpeeds.add(topSpeed);
-                            Log.d(TAG, "TOP SPEED: " + topSpeed);
-                            arlTempValues.clear();
-                            arlValuesY.clear();
-                            topSpeed = 0;
-                            sendData();
-                            break;
-                        }
-                    }
-                }
+        //determine if the user is punching up or down
+        if(arlValuesY.get(arlValuesY.size() - 1) > accStartingY){
+            if(strUpAndDown == "Up") {
+                Log.d(TAG, "Correct");
+                txtLayout.setText("Correct");
+                txtLayout.setTextColor(Color.GREEN);
+                Log.d(TAG, "Punching up");
+                txtLayout.setTextColor(Color.RED);
             }
+            else{
+                Log.d(TAG, "Incorrect");
+                txtLayout.setText("Incorrect");
+                txtLayout.setTextColor(Color.RED);
+            }
+        }else if(arlValuesY.get(arlValuesY.size() - 1) < accStartingY){
+            if(strUpAndDown == "Down"){
+                Log.d(TAG, "Correct");
+                txtLayout.setText("Correct");
+                txtLayout.setTextColor(Color.GREEN);
+                Log.d(TAG, "Punching down");
+
+                txtLayout.setTextColor(Color.BLUE);
+            }else{
+                Log.d(TAG, "Incorrect");
+                txtLayout.setText("Incorrect");
+                txtLayout.setTextColor(Color.RED);
+            }
+            //punching down
+
+        }else{
+            //not punching
+            Log.d(TAG, "Not punching");
+            txtLayout.setTextColor(Color.BLACK);
+            //clear the arraylist
+            arlValuesY.clear();
+
         }
-        arlValuesY.clear();
     }
+
+
+    //Jon code
+//        if(arlValuesY.size() < 6){
+//            return;
+//        }
+//
+//        //Loop through received Y-accelerometer values
+//        for(int i = 0; i < arlValuesY.size()-3; i++){
+//            //If the next receiving value is greater than the starting Y-value, then
+//            //  the punch is initiated
+//            if(accStartingY < arlValuesY.get(i+1)){
+//                Log.d(TAG, "Punch: " + arlValuesY.get(i));
+//                //Record the top speed from the recorded punches, else, add some temporary values
+//                if(topSpeed < arlValuesY.get(i))
+//                    topSpeed = arlValuesY.get(i);
+//                else
+//                    arlTempValues.add(arlValuesY.get(i));
+//
+//                //Arraylist will never be larger than 6, so when reached max size, check
+//                //  temporary values against the top speed
+//                //If the top speed is larger than any of the temp values, the punch may have
+//                //  reached maximum speed and is complete. Grab values
+//                if(arlValuesY.size() > 5){
+//                    for(int j = 0; j < arlTempValues.size(); j++){
+//                        if(arlTempValues.get(j) < topSpeed){
+//                            topSpeed -= accStartingY;
+//                            arlTopSpeeds.add(topSpeed);
+//                            Log.d(TAG, "TOP SPEED: " + topSpeed);
+//                            arlTempValues.clear();
+//                            arlValuesY.clear();
+//                            topSpeed = 0;
+//                            sendData();
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        arlValuesY.clear();
 
 
     public void sendData(){
@@ -201,8 +253,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onStart() {
         super.onStart();
-        sensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_GAME);
-        sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
         //When GameActivity is in focus, begin the process for the timer
         startTimer();
     }
