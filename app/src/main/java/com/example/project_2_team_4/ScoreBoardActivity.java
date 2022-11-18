@@ -87,7 +87,6 @@ public class ScoreBoardActivity extends AppCompatActivity {
             populateScoreBoard();
            userScore = sharedPref.getString("AvgScore","0");
             showPopUp();
-
     }
 
 
