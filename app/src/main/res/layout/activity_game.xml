@@ -13,48 +13,12 @@
         android:gravity="center"
         android:textColor="#0028FF"
         android:textSize="34sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="-" />
-
-    <ImageView
-        android:id="@+id/imgLeftGrip"
-        android:layout_width="312dp"
-        android:layout_height="197dp"
-        android:layout_marginEnd="252dp"
-        android:cropToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.522"
-        app:srcCompat="@drawable/phone" />
-
-    <ImageView
-        android:id="@+id/imgRightGrip"
-        android:layout_width="237dp"
-        android:layout_height="199dp"
-        android:layout_marginStart="292dp"
-        android:rotationX="0"
-        android:rotationY="-180"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.541"
-        app:srcCompat="@drawable/phone" />
-
-    <Button
-        android:id="@+id/btnPause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pause"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.01" />
 
     <TextView
         android:id="@+id/txtTimer"
@@ -66,7 +30,32 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnPause"
-        app:layout_constraintVertical_bias="0.027" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ImageView
+        android:id="@+id/imgLeftGrip"
+        android:layout_width="686dp"
+        android:layout_height="945dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.549"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/left_grip" />
+
+    <ImageView
+        android:id="@+id/imgRightGrip"
+        android:layout_width="686dp"
+        android:layout_height="945dp"
+        android:rotation="180"
+        android:rotationX="180"
+        android:rotationY="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.549"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/left_grip" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
