@@ -242,7 +242,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
             @Override
             public void run() {
-
                 //Change countdown text
                 runOnUiThread(() -> txtTimer.setText(COUNTDOWN + ""));
                 COUNTDOWN--;
