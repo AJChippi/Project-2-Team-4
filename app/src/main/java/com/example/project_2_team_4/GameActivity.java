@@ -242,7 +242,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
             @Override
             public void run() {
-                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
                 //Change countdown text
                 runOnUiThread(() -> txtTimer.setText(COUNTDOWN + ""));
                 COUNTDOWN--;
@@ -251,11 +251,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 i++;
                 //countdown is finished. Start tasks here
                 if (COUNTDOWN == 0) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-                    } else {
-                        v.vibrate(1000);
-                    }
+                    vibrate();
                     timerActive = true;
                     timer.cancel();
                 }
@@ -266,6 +262,15 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             timer.schedule(t, 1000L, 1000L);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void vibrate(){
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            v.vibrate(1000);
         }
     }
 
