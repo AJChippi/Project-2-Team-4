@@ -3,6 +3,7 @@ package com.example.project_2_team_4;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -67,6 +68,14 @@ public class ScoreBoardActivity extends AppCompatActivity {
 
 
 
+        btnTryAgain.setOnClickListener(v -> {
+            finish();
+        });
+
+        btnMenu.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        });
 
         fillArrayDummy();
 
