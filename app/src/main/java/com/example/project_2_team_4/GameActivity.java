@@ -11,7 +11,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -89,6 +94,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
 
         alertDialog = new AlertDialog.Builder(this);
 
@@ -236,13 +242,13 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     //Start 3 second countdown
     public void startTimer() {
+
         Timer timer = new Timer();
         int[] arrColors = {Color.RED, Color.RED, Color.YELLOW, Color.GREEN};
         TimerTask t = new TimerTask() {
             //Initial countdown time
             int COUNTDOWN = 3;
             int i = 0;
-
             @Override
             public void run() {
                 //Change countdown text
@@ -253,6 +259,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 i++;
                 //countdown is finished. Start tasks here
                 if (COUNTDOWN == 0) {
+                    vibrate();
                     timerActive = true;
                     timer.cancel();
                 }
@@ -263,6 +270,15 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             timer.schedule(t, 1000L, 1000L);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void vibrate(){
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            v.vibrate(1000);
         }
     }
 
