@@ -30,7 +30,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     ImageView imgRightGrip;
 
     //Variables
-    int ACC_THRESHOLD = 1;
+    //  Arbitrary value that adds a threshold when to start listening for sensor events
+    int ACC_THRESHOLD = 3;
     int DIRECTION_CHECK = 0;
     int numOfCommands;
     float accStartingX;
@@ -46,7 +47,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     boolean flagStarting = false;
     ArrayList<Float> arlValuesX;
     ArrayList<Float> arlValuesY;
-    ArrayList<Float> arlTempValues;
     ArrayList<Float> arlTopSpeeds;
 
     ArrayList<String> arlCommands;
@@ -82,7 +82,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //Initialize Arraylists
         arlValuesX = new ArrayList<>();
         arlValuesY = new ArrayList<>();
-        arlTempValues = new ArrayList<>();
         arlTopSpeeds = new ArrayList<>();
         arlCommands = new ArrayList<>();
 
@@ -96,8 +95,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         for (int i = 0; i < numOfCommands; i++) {
             int upAndDownRandom = (int) (Math.random() * 2);
             // get the random value of the array
-            arlCommands.add(upAndDown[upAndDownRandom]);
-       //     arlCommands.add("down");
+   //         arlCommands.add(upAndDown[upAndDownRandom]);
+            arlCommands.add("down");
         }
 
         // set the text of the layout
@@ -124,7 +123,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                         flagStarting = true;
                         Log.d(TAG, "Beginning: " + accStartingX + " | " + accStartingY);
                     }
-
                  //   if (sensorEvent.values[1] + ACC_THRESHOLD < accStartingY)
                         Log.d(TAG, "onSensorChanged: " + sensorEvent.values[1]);
 
@@ -143,8 +141,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     public void checkPunchY(float accValueY) {
         //determine if the user is punching up or down
         if (arlValuesY.get(arlValuesY.size() - 1) > accStartingY + ACC_THRESHOLD) {
-        // <--- NO THRESHOLD FOR EMULATOR ---> //
-        //if (arlValuesY.get(arlValuesY.size() - 1) > accStartingY) {
             if (arlCommands.get(0).equalsIgnoreCase("up")) {
                 findTopSpeedY(accValueY, arlCommands.get(0));
             } else {
@@ -153,8 +149,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
      //           arlValuesY.clear();
             }
         } else if (arlValuesY.get(arlValuesY.size() - 1) + ACC_THRESHOLD < accStartingY) {
-            // <--- NO THRESHOLD FOR EMULATOR ---> //
-       // } else if (arlValuesY.get(arlValuesY.size() - 1) < accStartingY) {
             if (arlCommands.get(0).equalsIgnoreCase("down")) {
                 if(DIRECTION_CHECK < 10){
                     Log.d(TAG, "Punching down");
@@ -175,6 +169,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+
     public void findTopSpeedY(float accValueY, String currentCommand) {
         //Command is up
         //Accelerometer should be increasing. Get top speed and once the
@@ -187,8 +182,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 topSpeed = accValueY;
                 Log.d(TAG, "FASTER ----> " + topSpeed);
             } else if (topSpeed - ACC_THRESHOLD > accValueY && topSpeed >= 0) {
-            // <--- NO THRESHOLD FOR EMULATOR ---> //
-        //    } else if (topSpeed > accValueY) {
                 //Slows down. Get top speed
                 Log.d(TAG, "SLOWER ----> " + accValueY);
                 topSpeed -= accStartingY;
@@ -207,13 +200,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             Log.d(TAG, "Checking: " + accValueY);
             //Speed value is going down when punching down
             if (topSpeed - ACC_THRESHOLD > accValueY) {
-      //      if(arlValuesY.get(arlValuesY.size() - 1) + ACC_THRESHOLD < accStartingY){
-            // <--- NO THRESHOLD FOR EMULATOR ---> //
-         //   if (topSpeed > accValueY) {
                 topSpeed = accValueY;
                 Log.d(TAG, "FASTER ----> " + topSpeed);
                 //Y-value is larger and speed is below 0. Essentially in negatives
-       //     } else if (arlValuesY.get(arlValuesY.size() - 1) + ACC_THRESHOLD < topSpeed && topSpeed < 0) {
             } else if (topSpeed < accValueY && topSpeed < 0) {
                 Log.d(TAG, "SLOWER ----> " + accValueY);
                 topSpeed *= -1;
