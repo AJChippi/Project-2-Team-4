@@ -37,7 +37,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     //Variables
     //  Arbitrary value that adds a threshold when to start listening for sensor events
     int ACC_THRESHOLD = 3;
-    int DIRECTION_CHECK = 0;
     int numOfCommands;
     float accStartingX;
     float accStartingY;
@@ -53,6 +52,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     ArrayList<Float> arlValuesX;
     ArrayList<Float> arlValuesY;
     ArrayList<Float> arlTopSpeeds;
+    ArrayList<Float> arlTempSpeeds;
 
     ArrayList<String> arlCommands;
     String strUpAndDown;
@@ -89,6 +89,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         arlValuesY = new ArrayList<>();
         arlTopSpeeds = new ArrayList<>();
         arlCommands = new ArrayList<>();
+        arlTempSpeeds = new ArrayList<>();
 
         //Initialize sensors
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -101,16 +102,16 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         for (int i = 0; i < numOfCommands; i++) {
             int upAndDownRandom = (int) (Math.random() * 2);
             // get the random value of the array
-   //         arlCommands.add(upAndDown[upAndDownRandom]);
-            arlCommands.add("down");
+            arlCommands.add(upAndDown[upAndDownRandom]);
+        //    arlCommands.add("up");
         }
 
         // set the text of the layout
         //    txtLayout.setText(arlCommands.get(0));
         txtLayout.setText(arlCommands.get(0));
-        if(strHandGrip.equalsIgnoreCase("left")){
+        if (strHandGrip.equalsIgnoreCase("left")) {
             imgLeftGrip.setVisibility(View.VISIBLE);
-        } else if(strHandGrip.equalsIgnoreCase("right")){
+        } else if (strHandGrip.equalsIgnoreCase("right")) {
             imgRightGrip.setVisibility(View.VISIBLE);
         }
     }
@@ -129,10 +130,10 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                         flagStarting = true;
                         Log.d(TAG, "Beginning: " + accStartingX + " | " + accStartingY);
                     }
-                 //   if (sensorEvent.values[1] + ACC_THRESHOLD < accStartingY)
-                        Log.d(TAG, "onSensorChanged: " + sensorEvent.values[1]);
+                    //   if (sensorEvent.values[1] + ACC_THRESHOLD < accStartingY)
+                    Log.d(TAG, "onSensorChanged: " + sensorEvent.values[1]);
 
-                    checkPunchY(sensorEvent.values[1]);
+                    checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
                     break;
 
                 case Sensor.TYPE_GYROSCOPE:
@@ -142,28 +143,28 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {}
+    public void onAccuracyChanged(Sensor sensor, int i) {
+    }
 
-    public void checkPunchY(float accValueY) {
+    public void checkPunchY(float accValueX, float accValueY) {
         //determine if the user is punching up or down
         if (arlValuesY.get(arlValuesY.size() - 1) > accStartingY + ACC_THRESHOLD) {
             if (arlCommands.get(0).equalsIgnoreCase("up")) {
-                findTopSpeedY(accValueY, arlCommands.get(0));
+                Log.d(TAG, "X-COORDS: " + accValueX);
+                Log.d(TAG, "Punching Up");
+                findTopSpeedY(accValueX, accValueY, arlCommands.get(0));
             } else {
                 Log.d(TAG, "Incorrect: Not UP");
-                DIRECTION_CHECK++;
-     //           arlValuesY.clear();
+                //           arlValuesY.clear();
             }
         } else if (arlValuesY.get(arlValuesY.size() - 1) + ACC_THRESHOLD < accStartingY) {
             if (arlCommands.get(0).equalsIgnoreCase("down")) {
-                if(DIRECTION_CHECK < 10){
-                    Log.d(TAG, "Punching down");
-                    findTopSpeedY(accValueY, arlCommands.get(0));
-                }
+                Log.d(TAG, "X-COORDS: " + accValueX);
+                Log.d(TAG, "Punching down");
+                findTopSpeedY(accValueX, accValueY, arlCommands.get(0));
             } else {
                 Log.d(TAG, "Incorrect: Not DOWN");
-                DIRECTION_CHECK++;
-       //         arlValuesY.clear();
+                //         arlValuesY.clear();
             }
             //punching down
         } else {
@@ -171,12 +172,11 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             Log.d(TAG, "Not punching");
             //clear the arraylist
             arlValuesY.clear();
-            DIRECTION_CHECK = 0;
         }
     }
 
 
-    public void findTopSpeedY(float accValueY, String currentCommand) {
+    public void findTopSpeedY(float accValueX, float accValueY, String currentCommand) {
         //Command is up
         //Accelerometer should be increasing. Get top speed and once the
         //  Y-value is smaller, stop listening, send data to ScoreBoardActivity and
@@ -186,20 +186,32 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         if (currentCommand.equalsIgnoreCase("up")) {
             if (topSpeed < accValueY && topSpeed >= 0) {
                 topSpeed = accValueY;
+                arlTempSpeeds.add(accValueX);
                 Log.d(TAG, "FASTER ----> " + topSpeed);
             } else if (topSpeed - ACC_THRESHOLD > accValueY && topSpeed >= 0) {
-                //Slows down. Get top speed
-                Log.d(TAG, "SLOWER ----> " + accValueY);
-                topSpeed -= accStartingY;
-                arlTopSpeeds.add(topSpeed);
-                Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
-                //Stop Listening
-                sensorManager.unregisterListener(this);
-                timerActive = false;
-                //Send speed data and swap activities
-                sendData();
-                Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
-                startActivity(intent);
+                float tempSum = 0;
+                for(int i = 0; i < arlTempSpeeds.size(); i++){
+                    tempSum+= arlTempSpeeds.get(i);
+                }
+                if(tempSum < 0){
+                    //Slows down. Get top speed
+                    Log.d(TAG, "SLOWER ----> " + accValueY);
+                    Log.d(TAG, "TOTAL X: " + tempSum);
+                    topSpeed -= accStartingY;
+                    arlTopSpeeds.add(topSpeed);
+                    Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
+                    //Stop Listening
+                    sensorManager.unregisterListener(this);
+                    timerActive = false;
+                    arlTempSpeeds.clear();
+                    //Send speed data and swap activities
+                    sendData();
+                    Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
+                    startActivity(intent);
+                } else {
+                    arlTempSpeeds.clear();
+                    topSpeed = 0;
+                }
             }
             //Command is down
         } else if (currentCommand.equalsIgnoreCase("down")) {
@@ -207,22 +219,30 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             //Speed value is going down when punching down
             if (topSpeed - ACC_THRESHOLD > accValueY) {
                 topSpeed = accValueY;
+                arlTempSpeeds.add(topSpeed);
                 Log.d(TAG, "FASTER ----> " + topSpeed);
                 //Y-value is larger and speed is below 0. Essentially in negatives
             } else if (topSpeed < accValueY && topSpeed < 0) {
-                Log.d(TAG, "SLOWER ----> " + accValueY);
-                topSpeed *= -1;
-                topSpeed -= accStartingY;
-                arlTopSpeeds.add(topSpeed);
-                Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
-                sensorManager.unregisterListener(this);
-                timerActive = false;
-                sendData();
-                Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
-                startActivity(intent);
+                if (arlTempSpeeds.size() > 5) {
+                    Log.d(TAG, "SLOWER ----> " + accValueY);
+                    Log.d(TAG, "Temps: " + arlTempSpeeds.size());
+                    topSpeed *= -1;
+                    topSpeed -= accStartingY;
+                    arlTopSpeeds.add(topSpeed);
+                    Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
+                    sensorManager.unregisterListener(this);
+                    timerActive = false;
+                    arlTempSpeeds.clear();
+                    sendData();
+                    Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
+                    startActivity(intent);
+                } else {
+                    arlTempSpeeds.clear();
+                    topSpeed = 0;
+                }
             }
         }
-    //    arlValuesY.clear();
+        //    arlValuesY.clear();
     }
 
     public void sendData() {
@@ -249,6 +269,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             //Initial countdown time
             int COUNTDOWN = 3;
             int i = 0;
+
             @Override
             public void run() {
                 //Change countdown text
@@ -273,7 +294,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    public void vibrate(){
+    public void vibrate() {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
