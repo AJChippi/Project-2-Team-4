@@ -12,7 +12,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -86,6 +89,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
 
         alertDialog = new AlertDialog.Builder(this);
 
@@ -228,6 +232,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     //Start 3 second countdown
     public void startTimer() {
+
         Timer timer = new Timer();
         int[] arrColors = {Color.RED, Color.RED, Color.YELLOW, Color.GREEN};
         TimerTask t = new TimerTask() {
@@ -237,6 +242,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
             @Override
             public void run() {
+                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 //Change countdown text
                 runOnUiThread(() -> txtTimer.setText(COUNTDOWN + ""));
                 COUNTDOWN--;
@@ -245,6 +251,11 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 i++;
                 //countdown is finished. Start tasks here
                 if (COUNTDOWN == 0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                    } else {
+                        v.vibrate(1000);
+                    }
                     timerActive = true;
                     timer.cancel();
                 }
