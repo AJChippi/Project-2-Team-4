@@ -4,6 +4,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -34,9 +35,15 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     ImageView imgLeftGrip;
     ImageView imgRightGrip;
 
+    SettingValues settings;
+    String tapAction;
+    String previousText;
+
+    String command;
+
     //Variables
     //  Arbitrary value that adds a threshold when to start listening for sensor events
-    int ACC_THRESHOLD = 3;
+    int ACC_THRESHOLD = 1;
     int numOfCommands;
     float accStartingX;
     float accStartingY;
@@ -63,10 +70,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Sensor gyroSensor;
     AlertDialog.Builder alertDialog;
 
+    int count = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        settings = SettingValues.getInstance();
 
         txtLayout = findViewById(R.id.txtLayout);
         txtTimer = findViewById(R.id.txtTimer);
@@ -78,11 +89,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         imgRightGrip.setImageResource(R.drawable.left_grip);
         imgLeftGrip.setVisibility(View.INVISIBLE);
         imgRightGrip.setVisibility(View.INVISIBLE);
-
-        //Get Settings Preferences
-        //For now, set things to default
-        numOfCommands = 2;
-        strHandGrip = "Left";
 
         //Initialize Arraylists
         arlValuesX = new ArrayList<>();
@@ -106,14 +112,15 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //    arlCommands.add("up");
         }
 
+        pickNewAction();
         // set the text of the layout
         //    txtLayout.setText(arlCommands.get(0));
-        txtLayout.setText(arlCommands.get(0));
-        if (strHandGrip.equalsIgnoreCase("left")) {
-            imgLeftGrip.setVisibility(View.VISIBLE);
-        } else if (strHandGrip.equalsIgnoreCase("right")) {
-            imgRightGrip.setVisibility(View.VISIBLE);
-        }
+
+//        if (strHandGrip.equalsIgnoreCase("left")) {
+//            imgLeftGrip.setVisibility(View.VISIBLE);
+//        } else if (strHandGrip.equalsIgnoreCase("right")) {
+//            imgRightGrip.setVisibility(View.VISIBLE);
+//        }
     }
 
     @Override
@@ -149,19 +156,20 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     public void checkPunchY(float accValueX, float accValueY) {
         //determine if the user is punching up or down
         if (arlValuesY.get(arlValuesY.size() - 1) > accStartingY + ACC_THRESHOLD) {
-            if (arlCommands.get(0).equalsIgnoreCase("up")) {
+            if (command.equalsIgnoreCase("up")) {
                 Log.d(TAG, "X-COORDS: " + accValueX);
                 Log.d(TAG, "Punching Up");
-                findTopSpeedY(accValueX, accValueY, arlCommands.get(0));
+                findTopSpeedY(accValueX, accValueY, command);
+
             } else {
                 Log.d(TAG, "Incorrect: Not UP");
                 //           arlValuesY.clear();
             }
         } else if (arlValuesY.get(arlValuesY.size() - 1) + ACC_THRESHOLD < accStartingY) {
-            if (arlCommands.get(0).equalsIgnoreCase("down")) {
+            if (command.equalsIgnoreCase("down")) {
                 Log.d(TAG, "X-COORDS: " + accValueX);
                 Log.d(TAG, "Punching down");
-                findTopSpeedY(accValueX, accValueY, arlCommands.get(0));
+                findTopSpeedY(accValueX, accValueY, command);
             } else {
                 Log.d(TAG, "Incorrect: Not DOWN");
                 //         arlValuesY.clear();
@@ -183,7 +191,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //  swap activities
         //Threshold is set in order to give leeway to getting values instead of grabbing every
         //  value
-        if (currentCommand.equalsIgnoreCase("up")) {
+        if (command.equalsIgnoreCase("up")) {
             if (topSpeed < accValueY && topSpeed >= 0) {
                 topSpeed = accValueY;
                 arlTempSpeeds.add(accValueX);
@@ -205,16 +213,17 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     timerActive = false;
                     arlTempSpeeds.clear();
                     //Send speed data and swap activities
-                    sendData();
-                    Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
-                    startActivity(intent);
+                    vibrate();
+                    count++;
+                    pickNewAction();
+
                 } else {
                     arlTempSpeeds.clear();
                     topSpeed = 0;
                 }
             }
             //Command is down
-        } else if (currentCommand.equalsIgnoreCase("down")) {
+        } else if (command.equalsIgnoreCase("down")) {
             Log.d(TAG, "Checking: " + accValueY);
             //Speed value is going down when punching down
             if (topSpeed - ACC_THRESHOLD > accValueY) {
@@ -223,7 +232,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 Log.d(TAG, "FASTER ----> " + topSpeed);
                 //Y-value is larger and speed is below 0. Essentially in negatives
             } else if (topSpeed < accValueY && topSpeed < 0) {
-                if (arlTempSpeeds.size() >= 5) {
+                if (arlTempSpeeds.size() >= 3) {
                     Log.d(TAG, "SLOWER ----> " + accValueY);
                     Log.d(TAG, "Temps: " + arlTempSpeeds.size());
                     topSpeed *= -1;
@@ -233,9 +242,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     sensorManager.unregisterListener(this);
                     timerActive = false;
                     arlTempSpeeds.clear();
-                    sendData();
-                    Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
-                    startActivity(intent);
+                    vibrate();
+                    count++;
+                    pickNewAction();
                 } else {
                     arlTempSpeeds.clear();
                     topSpeed = 0;
@@ -293,6 +302,51 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
     }
+
+    public void pickNewAction(){
+        if(count == settings.MaxPunches){
+            count = 0;
+            sendData();
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("All commands completed. Tap Next to View Results");
+            builder.setPositiveButton("NEXT", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //go to main activity
+                    Intent intent = new Intent(getApplicationContext(), ScoreBoardActivity.class);
+                    startActivity(intent);
+                }
+            });
+            builder.show();
+            return;
+
+        }
+        if(previousText != null){
+            txtLayout.setText(previousText);
+        }
+        startTimer();
+        onStart();
+            previousText = txtLayout.getText().toString();
+            int randomAction  = (int) (Math.random() * settings.actions.size());
+
+            String[] actions = settings.actions.toArray(new String[0]);
+
+            tapAction = actions[randomAction];
+
+            if(tapAction == "checkUp"){
+                command = "up";
+                txtLayout.setText("Punch Up");
+            }
+            else if(tapAction == "checkDown"){
+                command = "down";
+                txtLayout.setText("Punch Down");
+            }
+            else if(tapAction == "checkStraight") {
+                command = "straight";
+                txtLayout.setText("Punch Straight");
+            }
+        }
 
     public void vibrate() {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
