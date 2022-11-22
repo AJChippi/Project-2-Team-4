@@ -223,7 +223,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 Log.d(TAG, "FASTER ----> " + topSpeed);
                 //Y-value is larger and speed is below 0. Essentially in negatives
             } else if (topSpeed < accValueY && topSpeed < 0) {
-                if (arlTempSpeeds.size() > 5) {
+                if (arlTempSpeeds.size() >= 5) {
                     Log.d(TAG, "SLOWER ----> " + accValueY);
                     Log.d(TAG, "Temps: " + arlTempSpeeds.size());
                     topSpeed *= -1;
