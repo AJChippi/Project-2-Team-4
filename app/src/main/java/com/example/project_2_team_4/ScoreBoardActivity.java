@@ -237,7 +237,7 @@ public class ScoreBoardActivity extends AppCompatActivity {
             }
 
             txtName.setText(s.placement+". "+s.name);
-            txtScore.setText(s.score+" m/s²");
+            txtScore.setText(((int) Double.parseDouble(s.score))*100+" points");
 
 
             return view;
