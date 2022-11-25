@@ -46,27 +46,28 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     //Variables
     //  Arbitrary value that adds a threshold when to start listening for sensor events
     int ACC_THRESHOLD = 2;
+    int BUOYANCY_THRESHOLD = 4;
     float accStartingX;
     float accStartingY;
     float topSpeed = 0;
     String currentHandGrip = "";
-    String[] rightAndLeft = {"Right", "Left"};
-    String[] upAndDown = {"Up", "Down"};
     String TAG = "MYTAG";
     boolean timerActive = false;
     boolean flagStartingAcc = false;
-    boolean flagStartingGeo = false;
+    boolean flagStartingRot = false;
     ArrayList<Float> arlValuesX;
     ArrayList<Float> arlValuesY;
     ArrayList<Float> arlTopSpeeds;
     ArrayList<Float> arlTempSpeeds;
 
-    String strUpAndDown;
-
     //Sensors
     SensorManager sensorManager;
     Sensor accSensor;
     Sensor geoSensor;
+    Sensor magnSensor;
+
+    float[] mGravity = new float[0];
+    float[] mGeomagnetic = new float[0];
 
     int count = 0;
 
@@ -98,12 +99,15 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         geoSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+        magnSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         pickNewAction();
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+
+        
         if (timerActive) {
             switch (sensorEvent.sensor.getType()) {
                 case Sensor.TYPE_ACCELEROMETER:
@@ -117,14 +121,13 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                         Log.d(TAG, "Beginning: " + accStartingX + " | " + accStartingY);
                     }
 
-                 //   if(currentHandGrip.equalsIgnoreCase("right") || currentHandGrip.equalsIgnoreCase("left")){
-                        //   if (sensorEvent.values[1] + ACC_THRESHOLD < accStartingY)
-                    if(flagStartingGeo){
-             //           Log.d(TAG, "ACCELEROMETER: " + sensorEvent.values[1]);
+                    //Check if the orientation of the phone is correct. If so, begin grabbing punch
+                    mGravity = sensorEvent.values;
+                    if(flagStartingRot)
                         checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
-                    }
                     break;
 
+                //Get the orientation of the phone using X,Y,Z
                 case Sensor.TYPE_GAME_ROTATION_VECTOR:
                     Log.d(TAG, "GEO: " + Arrays.toString(sensorEvent.values));
                     getHandOrientation(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
@@ -143,7 +146,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
       //          Log.d(TAG, "X-COORDS: " + accValueX);
       //          Log.d(TAG, "Punching Up");
                 findTopSpeedY(accValueX, accValueY, command);
-
             } else {
       //          Log.d(TAG, "Incorrect: Not UP");
                 //           arlValuesY.clear();
@@ -216,7 +218,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 //Y-value is larger and speed is below 0. Essentially in negatives
             } else if (topSpeed < accValueY && topSpeed < 0) {
                 //Punching down was successful. Find top speed and check if there is a new command
-                if (arlTempSpeeds.size() >= 4) {
+                if (arlTempSpeeds.size() >= BUOYANCY_THRESHOLD) {
        //             Log.d(TAG, "SLOWER ----> " + accValueY);
        //             Log.d(TAG, "Temps: " + arlTempSpeeds.size());
                     topSpeed *= -1;
@@ -242,6 +244,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         SharedPreferences sharedPref = getSharedPreferences("Prefs", MODE_PRIVATE);
         SharedPreferences.Editor sharedEdit = sharedPref.edit();
 
+        //Find the top acceleration from the list of punches
         Log.d(TAG, "sendData: " + arlTopSpeeds);
         float topScore = 0;
         for (int i = 0; i < arlTopSpeeds.size(); i++){
@@ -312,7 +315,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
         // NEED SHARED PREF FOR HAND GRIP //
         setImgHandGrip("left");
-      //  startTimer();
         onStart();
             previousText = txtLayout.getText().toString();
             int randomAction  = (int) (Math.random() * settings.actions.size());
@@ -342,16 +344,20 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    //Stop listening to sensors and set the timer to inactive
     public void stopListening(){
         sensorManager.unregisterListener(this);
         timerActive = false;
     }
 
+    //Listen and register sensors
     public void startListening(){
         sensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, geoSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, magnSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    //Set the imageView for the hand grip set by the user
     public void setImgHandGrip(String strHandGrip){
         if (strHandGrip.equalsIgnoreCase("left")) {
             imgLeftGrip.setVisibility(View.VISIBLE);
@@ -360,18 +366,39 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    //Find the orientation of the phone by comparing X,Y,Z values
     public void getHandOrientation(float xValue, float yValue, float zValue){
-        //Left-hand flat OR left-hand side
-        // flat: [+, -, -]  side: [+, +, -]
-        Log.d(TAG, "Checking: " + xValue + " | " + yValue + " | " + zValue);
+        //Left-hand orientation
+        // up: [+, +, +]  side: [+, +, -] flat: [+, -, +]
+        if((xValue > 0 && yValue > 0 && zValue > 0) ||
+                (xValue > 0 && yValue > 0 && zValue < 0) ||
+                (xValue > 0 && yValue < 0 && zValue > 0)){
+            currentHandGrip = "left";
+        }
 
+        //Right-hand orientation
+        // flat: [-, -, -]  side: [-, +, -] flat: [+, -, -]
+        else if((xValue < 0 && yValue < 0 && zValue < 0) ||
+                (xValue < 0 && yValue > 0 && zValue < 0) ||
+                ((xValue > 0 && yValue < 0 && zValue < 0))){
+            currentHandGrip = "right";
+        }
+        else
+            currentHandGrip = "";
+
+        Log.d(TAG, "getHandOrientation: " + currentHandGrip);
+        flagStartingRot = currentHandGrip.equalsIgnoreCase("left");
+
+        /*  KEEP SAKE - BUGS
+         //Left-hand orientation
+        // up: [+, -, -]  side/flat: [+, +, -]
         if((xValue > 0 && yValue < 0 && zValue < 0) ||
                 (xValue > 0 && yValue > 0 && zValue < 0)){
             currentHandGrip = "left";
         }
 
-        //Right-hand flat OR right-hand side
-        // flat: [-, -, -]  side: [-, +, -]
+        //Right-hand orientation
+        // flat: [-, -, -]  side: [-, +, -] up: [+, +, +]
         else if((xValue < 0 && yValue < 0 && zValue < 0) ||
                 (xValue < 0 && yValue > 0 && zValue < 0) ||
                 (xValue > 0 && yValue > 0 && zValue > 0)){
@@ -379,9 +406,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
         else
             currentHandGrip = "";
-
-        Log.d(TAG, "getHandOrientation: " + currentHandGrip);
-        flagStartingGeo = currentHandGrip.equalsIgnoreCase("left");
+         */
     }
 
 
