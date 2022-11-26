@@ -54,6 +54,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     String[] upAndDown = {"Up", "Down"};
     String strHandGrip;
     String TAG = "MYTAG";
+    String TAG2 = "MYTAG2";
     boolean timerActive = false;
     boolean flagStarting = false;
     ArrayList<Float> arlValuesX;
@@ -141,6 +142,10 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     Log.d(TAG, "onSensorChanged: " + sensorEvent.values[1]);
 
                     checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
+                    if(command.equalsIgnoreCase("straight"))
+                        //Log.d(TAG2,sensorEvent.values[0]+"");
+                    //Log.d(TAG2,sensorEvent.values[1]+"");
+                        checkPunchX(sensorEvent.values[0], sensorEvent.values[1]);
                     break;
 
                 case Sensor.TYPE_GYROSCOPE:
@@ -151,6 +156,65 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
+    }
+    public void findTopSpeedX(float accValueX, float accValueY, String currentCommand) {
+        //Command is up
+        //Accelerometer should be increasing. Get top speed and once the
+        //  Y-value is smaller, stop listening, send data to ScoreBoardActivity and
+        //  swap activities
+        //Threshold is set in order to give leeway to getting values instead of grabbing every
+        //  value
+        Log.d(TAG2,accValueX+"");
+        if (command.equalsIgnoreCase("straight")) {
+            if (topSpeed < accValueX && topSpeed >= 0) {
+                topSpeed = accValueX;
+                arlTempSpeeds.add(accValueX);
+                Log.d(TAG2, "FASTER ----> " + topSpeed);
+            } else if (topSpeed>accValueX+3 && topSpeed >= 0) {
+                //Slows down. Get top speed
+                Log.d(TAG2, "SLOWER ----> " + accValueX);
+                Log.d(TAG2, "TOTAL X: " + topSpeed);
+                topSpeed -= accStartingX;
+                arlTopSpeeds.add(topSpeed);
+                Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
+                //Stop Listening
+                sensorManager.unregisterListener(this);
+                timerActive = false;
+                //arlTempSpeeds.clear();
+                //Send speed data and swap activities
+                vibrate();
+                count++;
+                pickNewAction();
+            }
+
+            else {
+                    arlTempSpeeds.clear();
+                    topSpeed = 0;
+                }
+            }
+            //Command is down
+        }
+        //    arlValuesY.clear();
+
+
+    public void checkPunchX(float accValueX, float accValueY) {
+        //determine if the user is punching straight
+        if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD&&accValueY>8&&accValueY<12.5&&accValueX>10) {
+            if (command.equalsIgnoreCase("straight")) {
+                Log.d(TAG2, "X-COORDS: " + accValueX);
+                Log.d(TAG2, "Punching Straight");
+                findTopSpeedX(accValueX, accValueY, command);
+
+            } else {
+                Log.d(TAG2, "Incorrect: Not Straight");
+                //           arlValuesY.clear();
+            }
+        } else {
+            //not punching
+            //Log.d(TAG2, "Not punching");
+            //clear the arraylist
+            arlValuesX.clear();
+        }
     }
 
     public void checkPunchY(float accValueX, float accValueY) {
