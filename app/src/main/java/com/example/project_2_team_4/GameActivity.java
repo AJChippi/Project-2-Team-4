@@ -120,7 +120,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
                     //Check if the orientation of the phone is correct. If so, begin grabbing punch
                     if(flagStartingRot)
-            //            checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
+                        checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
                     break;
 
                 //Get the orientation of the phone using X,Y,Z
