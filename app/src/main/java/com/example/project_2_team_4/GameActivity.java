@@ -64,10 +64,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor accSensor;
     Sensor geoSensor;
-    Sensor magnSensor;
-
-    float[] mGravity = new float[0];
-    float[] mGeomagnetic = new float[0];
+    Sensor gyroSensor;
 
     int count = 0;
 
@@ -99,7 +96,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         geoSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
-        magnSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         pickNewAction();
     }
@@ -122,15 +119,18 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     }
 
                     //Check if the orientation of the phone is correct. If so, begin grabbing punch
-                    mGravity = sensorEvent.values;
                     if(flagStartingRot)
-                        checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
+            //            checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
                     break;
 
                 //Get the orientation of the phone using X,Y,Z
                 case Sensor.TYPE_GAME_ROTATION_VECTOR:
                     Log.d(TAG, "GEO: " + Arrays.toString(sensorEvent.values));
                     getHandOrientation(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
+                    break;
+
+                case Sensor.TYPE_GYROSCOPE:
+                    Log.d(TAG, "GYRO: " + Arrays.toString(sensorEvent.values));
                     break;
             }
         }
@@ -201,7 +201,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     vibrate();
                     count++;
                     pickNewAction();
-
                 } else {
                     arlTempSpeeds.clear();
                     topSpeed = 0;
@@ -354,7 +353,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     public void startListening(){
         sensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, geoSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, magnSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_UI);
     }
 
     //Set the imageView for the hand grip set by the user
@@ -408,8 +407,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             currentHandGrip = "";
          */
     }
-
-
+    
     @Override
     protected void onStart() {
         super.onStart();
