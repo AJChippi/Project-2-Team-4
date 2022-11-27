@@ -21,7 +21,7 @@
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="283dp"
-        android:layout_height="209dp"
+        android:layout_height="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView"
@@ -33,19 +33,18 @@
         android:layout_height="wrap_content"
         android:layout_marginVertical="32dp"
         android:text="Start the Punch"
-        app:layout_constraintBottom_toTopOf="@+id/btnSettings"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <Button
         android:id="@+id/btnSettings"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Settings"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintEnd_toEndOf="@+id/btnNewGame"
+        app:layout_constraintHorizontal_bias="0.492"
+        app:layout_constraintStart_toStartOf="@+id/btnNewGame"
+        app:layout_constraintTop_toBottomOf="@+id/btnNewGame" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

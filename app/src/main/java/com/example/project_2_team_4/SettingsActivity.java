@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
@@ -23,6 +25,7 @@ public class SettingsActivity extends AppCompatActivity {
     Button btnSave, btnBack2Main;
     SharedPreferences sharedPref;
     SettingValues settingValues;
+    String Orientation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +45,12 @@ public class SettingsActivity extends AppCompatActivity {
         checkDown.setChecked(sharedPref.getBoolean("checkDown", true));
         checkStraight.setChecked(sharedPref.getBoolean("checkStraight", true));
         seekBar.setProgress(sharedPref.getInt("punches", 10));
-        //radioGroup.check(sharedPref.getBoolean("radioGroup", true) ? R.id.radioButton : R.id.radioButton2);
-
+        Orientation = sharedPref.getString("Orientation", "Right");
+        booleanRight = sharedPref.getBoolean("radioGroup", true);
+        radioGroup.check(sharedPref.getBoolean("radioGroup", true) ? R.id.radioButton : R.id.radioButton2);
         txtSeek.setText(String.valueOf(seekBar.getProgress()));
+
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -59,29 +65,46 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+
         radioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
             RadioButton rdoChecked = findViewById(i);
             selectedHand = String.valueOf(rdoChecked.getText());
-            if (selectedHand.equals("Right")) {
-                booleanRight = true;
-            } else if (selectedHand.equals("Left")) {
-                booleanRight = true;
-            }else{
-                booleanRight = false;
+
+            if (selectedHand.equals("Right Handed")) {
+                Orientation = "Right";
+            } else if (selectedHand.equals("Left Handed")) {
+                Orientation = "Left";
             }
         });
 
-        btnSave.setOnClickListener(v -> {
-            sharedPref = getSharedPreferences("settingsPref", MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPref.edit();
-            //editor.putBoolean("radioGroup", booleanRight);
-            editor.putInt("punches", seekBar.getProgress());
-            editor.putBoolean("checkUp", checkUp.isChecked());
-            editor.putBoolean("checkDown", checkDown.isChecked());
-            editor.putBoolean("checkStraight", checkStraight.isChecked());
-            editor.commit();
 
-            Toast.makeText(this, settingValues.actions.size()+"", Toast.LENGTH_SHORT).show();
+        btnSave.setOnClickListener(v -> {
+            if(checkSelectionExists()==true){
+                sharedPref = getSharedPreferences("settingsPref", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("Orientation", Orientation);
+                switch (Orientation) {
+                    case "Left":
+                        booleanRight = false;
+                        break;
+                    case "Right":
+                        booleanRight = true;
+                        break;
+                }
+                editor.putBoolean("radioGroup", booleanRight);
+                editor.putInt("punches", seekBar.getProgress());
+                editor.putBoolean("checkUp", checkUp.isChecked());
+                editor.putBoolean("checkDown", checkDown.isChecked());
+                editor.putBoolean("checkStraight", checkStraight.isChecked());
+                editor.commit();
+
+                Toast.makeText(this, "Settings Saved", Toast.LENGTH_SHORT).show();;
+            } else if(checkSelectionExists()==false){
+                Toast.makeText(this, "Please select at least one direction", Toast.LENGTH_SHORT).show();
+            }
+
+
+
 
         });
 
@@ -90,6 +113,32 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
     }
+    public void checkDirection(View view){
+        CheckBox chkSelected = (CheckBox) view;
+        String addToActionList = null;
+        if(chkSelected.getText().equals("Punch Up")){
+            addToActionList= "checkUp";
+        } else if(chkSelected.getText().equals("Punch Down")){
+            addToActionList= "checkDown";
+        } else if(chkSelected.getText().equals("Punch Straight")){
+            addToActionList= "checkStraight";
+        }
 
 
+        if(chkSelected.isChecked()) {
+            settingValues.actions.add(addToActionList);
+        }
+        else {
+            settingValues.actions.remove(addToActionList);
+        }
+        Log.d("asfdasfasf", String.valueOf(settingValues.actions));
+    }
+
+    private boolean checkSelectionExists() {
+        boolean selectionExists = false;
+        selectionExists = (boolean) ((CheckBox) findViewById(R.id.checkUp)).isChecked() ? true : false ||
+                (boolean) ((CheckBox) findViewById(R.id.checkDown)).isChecked() ? true : false ||
+                (boolean) ((CheckBox) findViewById(R.id.checkStraight)).isChecked() ? true : false;
+        return selectionExists;
+    }
 }

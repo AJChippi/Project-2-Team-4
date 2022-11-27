@@ -27,6 +27,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtSettings" />
 
+    <TextView
+        android:id="@+id/txtNoOfPunches2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:text="Choose Hand Orientation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches" />
+
+    <TextView
+        android:id="@+id/txtNoOfPunches3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:text="Select Directions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+
     <Button
         android:id="@+id/btnSave"
         android:layout_width="0dp"
@@ -75,9 +95,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches">
+        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches2">
 
         <RadioButton
             android:id="@+id/radioButton2"
@@ -98,21 +117,21 @@
         android:id="@+id/checkUp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
         android:checked="true"
-        android:text="Up"
+        android:onClick="checkDirection"
+        android:text="Punch Up"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches3" />
 
     <CheckBox
         android:id="@+id/checkDown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
         android:checked="true"
-        android:text="Down"
+        android:onClick="checkDirection"
+        android:text="Punch Down"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/checkUp" />
 
@@ -120,10 +139,10 @@
         android:id="@+id/checkStraight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
         android:checked="true"
-        android:text="Straight"
+        android:onClick="checkDirection"
+        android:text="Punch Straight"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/checkDown" />
 
