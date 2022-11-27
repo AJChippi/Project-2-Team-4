@@ -199,7 +199,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     public void checkPunchX(float accValueX, float accValueY) {
         //determine if the user is punching straight
-        if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD&&accValueY>8&&accValueY<12.5&&accValueX>10) {
+        //Log.d(TAG2, accValueX+"");
+        //&&accValueY>8&&accValueY<12.5&&accValueX>10
+        if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD) {
             if (command.equalsIgnoreCase("straight")) {
                 Log.d(TAG2, "X-COORDS: " + accValueX);
                 Log.d(TAG2, "Punching Straight");
