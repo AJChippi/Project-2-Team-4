@@ -40,14 +40,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     SettingValues settings;
     String tapAction;
     String previousText;
-
-
     String command;
 
     //Variables
     //  Arbitrary value that adds a threshold when to start listening for sensor events
-    int ACC_THRESHOLD = 2;
-    int BUOYANCY_THRESHOLD = 4;
+    int ACC_THRESHOLD = 1;
+    int BUOYANCY_THRESHOLD = 3;
     float accStartingX;
     float accStartingY;
     float topSpeed = 0;
@@ -121,24 +119,24 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     }
 
                     //Check if the orientation of the phone is correct. If so, begin grabbing punch
-                    if(flagStartingRot) {
-                        checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
+            //        if(flagStartingRot) {
+
+                        if(command.equalsIgnoreCase("up") || command.equalsIgnoreCase("down"))
+                                checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
                         if (command.equalsIgnoreCase("straight")) {
-                            //Log.d(TAG2,sensorEvent.values[0]+"");
-                            //Log.d(TAG2,sensorEvent.values[1]+"");
-                            checkPunchX(sensorEvent.values[0], sensorEvent.values[1]);
+                                checkPunchX(sensorEvent.values[0], sensorEvent.values[1]);
                         }
-                    }
+               //     }
                     break;
 
                 //Get the orientation of the phone using X,Y,Z
                 case Sensor.TYPE_GAME_ROTATION_VECTOR:
-                    Log.d(TAG, "GEO: " + Arrays.toString(sensorEvent.values));
-                    getHandOrientation(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
+                   // Log.d(TAG, "GEO: " + Arrays.toString(sensorEvent.values));
+                 //   getHandOrientation(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
                     break;
 
                 case Sensor.TYPE_GYROSCOPE:
-                    Log.d(TAG, "GYRO: " + Arrays.toString(sensorEvent.values));
+                 //   Log.d(TAG, "GYRO: " + Arrays.toString(sensorEvent.values));
                     break;
             }
         }
@@ -183,20 +181,20 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //Threshold is set in order to give leeway to getting values instead of grabbing every
         //  value
         // Log.d(TAG2,accValueX+"");
-        Log.d(TAG2, "Defaults: " + topSpeed + " | " + arlTempSpeeds.size());
+   //     Log.d(TAG2, "Defaults: " + topSpeed + " | " + arlTempSpeeds.size());
         if (command.equalsIgnoreCase("straight")) {
             if (topSpeed < accValueX && topSpeed >= 0) {
                 topSpeed = accValueX;
                 arlTempSpeeds.add(accValueY);
-                //      Log.d(TAG2, "FASTER ----> " + topSpeed);
+                Log.d(TAG2, "FASTER ----> " + topSpeed);
                 //      Log.d(TAG2, "Current Y-value: " + accValueY);
-            } else if (topSpeed > accValueX + 2 && topSpeed >= 0) {
+            } else if (topSpeed > accValueX + ACC_THRESHOLD && topSpeed >= 0) {
                 float tempSum = 0;
                 for (int i = 0; i < arlTempSpeeds.size(); i++)
                     tempSum += arlTempSpeeds.get(i);
 
                 Log.d(TAG2, "SUM Y: " + tempSum);
-                if (tempSum > 0 && arlTempSpeeds.size() > 5) {
+                if (tempSum > 0 && arlTempSpeeds.size() > BUOYANCY_THRESHOLD) {
                     Log.d(TAG2, "COUNT: " + arlTempSpeeds.size());
                     //Slows down. Get top speed
                     Log.d(TAG2, "SLOWER ----> " + accValueX);
@@ -215,12 +213,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     count++;
                     pickNewAction();
                 } else {
-                    Log.d(TAG2, "findTopSpeedX: Check 1");
+                    Log.d(TAG2, "findTopSpeedX: Check 1: " + accValueX);
                     arlTempSpeeds.clear();
                     topSpeed = 0;
                 }
             } else {
-                Log.d(TAG2, "findTopSpeedX: Check 2");
+                Log.d(TAG2, "findTopSpeedX: Check 2 -> " + accValueX);
                 arlTempSpeeds.clear();
                 topSpeed = 0;
             }
@@ -232,8 +230,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //&&accValueY>8&&accValueY<12.5&&accValueX>10
         if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD) {
             if (command.equalsIgnoreCase("straight")) {
-                Log.d(TAG2, "X-COORDS: " + accValueX);
-                Log.d(TAG2, "Punching Straight");
+         //       Log.d(TAG2, "X-COORDS: " + accValueX);
+         //       Log.d(TAG2, "Punching Straight");
                 findTopSpeedX(accValueX, accValueY, command);
 
             } else {
@@ -257,20 +255,21 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //  swap activities
         //Threshold is set in order to give leeway to getting values instead of grabbing every
         //  value
-        if (command.equalsIgnoreCase("up")) {
+        if (command.equalsIgnoreCase("up") && accValueY > accStartingY+4) {
             if (topSpeed < accValueY && topSpeed >= 0) {
                 topSpeed = accValueY;
                 arlTempSpeeds.add(accValueX);
-   //             Log.d(TAG, "FASTER ----> " + topSpeed);
-            } else if (topSpeed - ACC_THRESHOLD > accValueY && topSpeed >= 0) {
+                Log.d(TAG, "FASTER ----> " + topSpeed);
+            } else if (topSpeed - ACC_THRESHOLD+1 > accValueY && topSpeed >= 0) {
                 float tempSum = 0;
                 for(int i = 0; i < arlTempSpeeds.size(); i++){
                     tempSum+= arlTempSpeeds.get(i);
                 }
-                if(tempSum < 0){
+                Log.d(TAG, "Tempsum: " + tempSum + " | Size: " + arlTempSpeeds.size());
+                if(tempSum < 0 && arlTempSpeeds.size() > BUOYANCY_THRESHOLD){
                     //Punching up was successful. Find top s[eed and check if there is a new command
-      //              Log.d(TAG, "SLOWER ----> " + accValueY);
-       //             Log.d(TAG, "TOTAL X: " + tempSum);
+                    Log.d(TAG, "SLOWER ----> " + accValueY);
+                    Log.d(TAG, "TOTAL X: " + tempSum + " Size: " + arlTempSpeeds.size());
                     topSpeed -= accStartingY;
                     arlTopSpeeds.add(topSpeed);
         //            Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
@@ -283,9 +282,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     count++;
                     pickNewAction();
                 } else {
+                    Log.d(TAG, "Check 1: " + accValueY);
                     arlTempSpeeds.clear();
                     topSpeed = 0;
                 }
+            }else {
+                Log.d(TAG, "Check 2: " + accValueY);
+                arlTempSpeeds.clear();
+                topSpeed = 0;
             }
             //Command is down
         } else if (command.equalsIgnoreCase("down")) {
@@ -294,27 +298,32 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             if (topSpeed - ACC_THRESHOLD > accValueY) {
                 topSpeed = accValueY;
                 arlTempSpeeds.add(topSpeed);
-     //           Log.d(TAG, "FASTER ----> " + topSpeed);
+                Log.d(TAG, "FASTER ----> " + topSpeed);
                 //Y-value is larger and speed is below 0. Essentially in negatives
             } else if (topSpeed < accValueY && topSpeed < 0) {
                 //Punching down was successful. Find top speed and check if there is a new command
-                if (arlTempSpeeds.size() >= BUOYANCY_THRESHOLD) {
-       //             Log.d(TAG, "SLOWER ----> " + accValueY);
-       //             Log.d(TAG, "Temps: " + arlTempSpeeds.size());
+                if (arlTempSpeeds.size() > BUOYANCY_THRESHOLD) {
+                   Log.d(TAG, "SLOWER ----> " + accValueY);
+                    Log.d(TAG, "Temps: " + arlTempSpeeds.size());
                     topSpeed *= -1;
                     topSpeed -= accStartingY;
-                    arlTopSpeeds.add(topSpeed);
-        //            Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
-                    stopListening();
-                    timerActive = false;
-                    arlTempSpeeds.clear();
-                    vibrate();
-                    count++;
-                    pickNewAction();
+                    if(topSpeed > 0){
+                        arlTopSpeeds.add(topSpeed);
+                        //            Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
+                        stopListening();
+                        timerActive = false;
+                        arlTempSpeeds.clear();
+                        vibrate();
+                        count++;
+                        pickNewAction();
+                    }
                 } else {
                     arlTempSpeeds.clear();
                     topSpeed = 0;
                 }
+            }else {
+                arlTempSpeeds.clear();
+                topSpeed = 0;
             }
         }
         //    arlValuesY.clear();
