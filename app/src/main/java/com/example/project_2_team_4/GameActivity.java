@@ -52,6 +52,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     float topSpeed = 0;
     String currentHandGrip = "";
     String TAG = "MYTAG";
+    String TAG2 = "MYTAG2";
     boolean timerActive = false;
     boolean flagStartingAcc = false;
     boolean flagStartingRot = false;
@@ -119,8 +120,16 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     }
 
                     //Check if the orientation of the phone is correct. If so, begin grabbing punch
-                    if(flagStartingRot)
+                    if(flagStartingRot) {
                         checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
+                        if (command.equalsIgnoreCase("straight")) {
+                            //Log.d(TAG2,sensorEvent.values[0]+"");
+                            //Log.d(TAG2,sensorEvent.values[1]+"");
+                            checkPunchX(sensorEvent.values[0], sensorEvent.values[1]);
+                        }
+
+                    }
+
                     break;
 
                 //Get the orientation of the phone using X,Y,Z
@@ -165,6 +174,75 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
       //      Log.d(TAG, "Not punching");
             //clear the arraylist
             arlValuesY.clear();
+        }
+    }
+    public void findTopSpeedX(float accValueX, float accValueY, String currentCommand) {
+        //Command is straight
+        //Accelerometer should be decreasing. Get top speed and once the
+        //  X-value is greater, stop listening, send data to ScoreBoardActivity and
+        //  swap activities
+
+        Log.d(TAG2, "Defaults: " + topSpeed + " | " + arlTempSpeeds.size());
+        if (command.equalsIgnoreCase("straight")) {
+            if (topSpeed < accValueX && topSpeed >= 0) {//if the top speed is less then the current set that to top speed
+                topSpeed = accValueX;
+                arlTempSpeeds.add(accValueY);//helps determine if punch is up or down
+                //      Log.d(TAG2, "FASTER ----> " + topSpeed);
+                //      Log.d(TAG2, "Current Y-value: " + accValueY);
+            } else if (topSpeed > accValueX + 2 && topSpeed >= 0) {//if it is not greater see if the user is punching up or down
+                float tempSum = 0;
+                for (int i = 0; i < arlTempSpeeds.size(); i++)
+                    tempSum += arlTempSpeeds.get(i);
+
+                Log.d(TAG2, "SUM Y: " + tempSum);
+                if (tempSum > 0 && arlTempSpeeds.size() > 5) {
+                    Log.d(TAG2, "COUNT: " + arlTempSpeeds.size());
+                    //Slows down. Get top speed
+                    Log.d(TAG2, "SLOWER ----> " + accValueX);
+                    //     Log.d(TAG2, "TOTAL X: " + topSpeed);
+                    topSpeed -= accStartingX;
+                    arlTopSpeeds.add(topSpeed);
+                    Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
+                    //Stop Listening
+                    sensorManager.unregisterListener(this);
+                    timerActive = false;
+                    arlTempSpeeds.clear();
+                    topSpeed = 0;
+                    //arlTempSpeeds.clear();
+                    //Send speed data and swap activities
+                    vibrate();
+                    count++;
+                    pickNewAction();
+                } else {
+                    Log.d(TAG2, "findTopSpeedX: Check 1");
+                    arlTempSpeeds.clear();
+                    topSpeed = 0;
+                }
+            } else {
+                Log.d(TAG2, "findTopSpeedX: Check 2");
+                arlTempSpeeds.clear();
+                topSpeed = 0;
+            }
+        }
+    }
+    public void checkPunchX(float accValueX, float accValueY) {
+        //determine if the user is punching straight if it is send it to find the top speed
+
+        if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD) {
+            if (command.equalsIgnoreCase("straight")) {
+                Log.d(TAG2, "X-COORDS: " + accValueX);
+                Log.d(TAG2, "Punching Straight");
+                findTopSpeedX(accValueX, accValueY, command);
+
+            } else {
+                Log.d(TAG2, "Incorrect: Not Straight");
+                //           arlValuesY.clear();
+            }
+        } else {
+            //not punching
+            //Log.d(TAG2, "Not punching");
+            //clear the arraylist
+            arlValuesX.clear();
         }
     }
 
