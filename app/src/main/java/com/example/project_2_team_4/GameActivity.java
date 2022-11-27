@@ -164,36 +164,51 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //  swap activities
         //Threshold is set in order to give leeway to getting values instead of grabbing every
         //  value
-        Log.d(TAG2,accValueX+"");
+        // Log.d(TAG2,accValueX+"");
+        Log.d(TAG2, "Defaults: " + topSpeed + " | " + arlTempSpeeds.size());
         if (command.equalsIgnoreCase("straight")) {
             if (topSpeed < accValueX && topSpeed >= 0) {
                 topSpeed = accValueX;
-                arlTempSpeeds.add(accValueX);
-                Log.d(TAG2, "FASTER ----> " + topSpeed);
-            } else if (topSpeed>accValueX+3 && topSpeed >= 0) {
-                //Slows down. Get top speed
-                Log.d(TAG2, "SLOWER ----> " + accValueX);
-                Log.d(TAG2, "TOTAL X: " + topSpeed);
-                topSpeed -= accStartingX;
-                arlTopSpeeds.add(topSpeed);
-                Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
-                //Stop Listening
-                sensorManager.unregisterListener(this);
-                timerActive = false;
-                //arlTempSpeeds.clear();
-                //Send speed data and swap activities
-                vibrate();
-                count++;
-                pickNewAction();
-            }
+                arlTempSpeeds.add(accValueY);
+                //      Log.d(TAG2, "FASTER ----> " + topSpeed);
+                //      Log.d(TAG2, "Current Y-value: " + accValueY);
+            } else if (topSpeed > accValueX + 2 && topSpeed >= 0) {
+                float tempSum = 0;
+                for (int i = 0; i < arlTempSpeeds.size(); i++)
+                    tempSum += arlTempSpeeds.get(i);
 
-            else {
+                Log.d(TAG2, "SUM Y: " + tempSum);
+                if (tempSum > 0 && arlTempSpeeds.size() > 5) {
+                    Log.d(TAG2, "COUNT: " + arlTempSpeeds.size());
+                    //Slows down. Get top speed
+                    Log.d(TAG2, "SLOWER ----> " + accValueX);
+                    //     Log.d(TAG2, "TOTAL X: " + topSpeed);
+                    topSpeed -= accStartingX;
+                    arlTopSpeeds.add(topSpeed);
+                    Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
+                    //Stop Listening
+                    sensorManager.unregisterListener(this);
+                    timerActive = false;
+                    arlTempSpeeds.clear();
+                    topSpeed = 0;
+                    //arlTempSpeeds.clear();
+                    //Send speed data and swap activities
+                    vibrate();
+                    count++;
+                    pickNewAction();
+                } else {
+                    Log.d(TAG2, "findTopSpeedX: Check 1");
                     arlTempSpeeds.clear();
                     topSpeed = 0;
                 }
+            } else {
+                Log.d(TAG2, "findTopSpeedX: Check 2");
+                arlTempSpeeds.clear();
+                topSpeed = 0;
             }
-            //Command is down
         }
+    }
+
         //    arlValuesY.clear();
 
 
