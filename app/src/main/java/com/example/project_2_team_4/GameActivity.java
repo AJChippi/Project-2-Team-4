@@ -312,23 +312,24 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         if(previousText != null){
             txtLayout.setText(previousText);
         }
-        // NEED SHARED PREF FOR HAND GRIP //
-        setImgHandGrip("left");
+        // SHARED PREF FOR HAND GRIP //
+        SharedPreferences sharedPref = getSharedPreferences("settingsPref", MODE_PRIVATE);
+        setImgHandGrip(sharedPref.getString("Orientation", "Right"));
         onStart();
             previousText = txtLayout.getText().toString();
             int randomAction  = (int) (Math.random() * settings.actions.size());
             String[] actions = settings.actions.toArray(new String[0]);
             tapAction = actions[randomAction];
-
-            if(tapAction == "checkUp"){
+            Log.d("sfasfa1",tapAction);
+            if(tapAction.equals("checkUp")){
                 command = "up";
                 txtLayout.setText("Punch Up");
             }
-            else if(tapAction == "checkDown"){
+            else if(tapAction.equals("checkDown")){
                 command = "down";
                 txtLayout.setText("Punch Down");
             }
-            else if(tapAction == "checkStraight") {
+            else if(tapAction.equals("checkStraight")) {
                 command = "straight";
                 txtLayout.setText("Punch Straight");
             }
