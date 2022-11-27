@@ -33,29 +33,4 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
-    <ImageView
-        android:id="@+id/imgLeftGrip"
-        android:layout_width="686dp"
-        android:layout_height="945dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.549"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/left_grip" />
-
-    <ImageView
-        android:id="@+id/imgRightGrip"
-        android:layout_width="686dp"
-        android:layout_height="945dp"
-        android:rotation="180"
-        android:rotationX="180"
-        android:rotationY="0"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.549"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/left_grip" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

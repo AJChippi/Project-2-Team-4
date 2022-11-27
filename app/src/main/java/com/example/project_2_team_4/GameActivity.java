@@ -31,61 +31,49 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class GameActivity extends AppCompatActivity implements SensorEventListener {
-    //Views
+        //  Views  //
     TextView txtLayout;
     TextView txtTimer;
-    ImageView imgLeftGrip;
-    ImageView imgRightGrip;
-
+        //  Variables  //
+    //  Constants  //
+    //  Arbitrary values that adds a threshold on when to start listening for sensor events
+    int ACC_THRESHOLD = 1;
+    int SENSOR_THRESHOLD = 2;
+    int BUOYANCY_THRESHOLD = 3;
+    String TAG = "MYTAG";
+    String TAG2 = "MYTAG2";
+    //Shared Pref values
     SettingValues settings;
     String tapAction;
     String previousText;
-
     String command;
-
-    //Variables
-    //  Arbitrary value that adds a threshold when to start listening for sensor events
-    int ACC_THRESHOLD = 2;
-    int BUOYANCY_THRESHOLD = 4;
+    int count = 0;
+    //Speeds
     float accStartingX;
     float accStartingY;
     float topSpeed = 0;
-    String currentHandGrip = "";
-    String TAG = "MYTAG";
-    String TAG2 = "MYTAG2";
-    boolean timerActive = false;
+    //Flags
+    boolean timerFinished = false;
+
     boolean flagStartingAcc = false;
-    boolean flagStartingRot = false;
+    //Arraylists
     ArrayList<Float> arlValuesX;
     ArrayList<Float> arlValuesY;
     ArrayList<Float> arlTopSpeeds;
     ArrayList<Float> arlTempSpeeds;
-
     //Sensors
     SensorManager sensorManager;
     Sensor accSensor;
-    Sensor geoSensor;
-    Sensor gyroSensor;
-
-    int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        //Find IDs and set Settings
         settings = SettingValues.getInstance();
-
         txtLayout = findViewById(R.id.txtLayout);
         txtTimer = findViewById(R.id.txtTimer);
-
-        //Image Resources
-        imgLeftGrip = findViewById(R.id.imgLeftGrip);
-        imgRightGrip = findViewById(R.id.imgRightGrip);
-        imgLeftGrip.setImageResource(R.drawable.left_grip);
-        imgRightGrip.setImageResource(R.drawable.left_grip);
-        imgLeftGrip.setVisibility(View.INVISIBLE);
-        imgRightGrip.setVisibility(View.INVISIBLE);
 
         //Initialize Arraylists
         arlValuesX = new ArrayList<>();
@@ -96,50 +84,33 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //Initialize sensors
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        geoSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
-        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
+        //Get new command until maximum commands has been reached
         pickNewAction();
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-
-        
-        if (timerActive) {
+        //Once the timer has been completed, start listening for Accelerometer events
+        if (timerFinished) {
             switch (sensorEvent.sensor.getType()) {
                 case Sensor.TYPE_ACCELEROMETER:
-                    //Get starting accelerometer values
+                    //Add X & Y values into appropriate lists
                     arlValuesX.add(sensorEvent.values[0]);
                     arlValuesY.add(sensorEvent.values[1]);
+                    //Get starting accelerometer x & y values
                     if (!flagStartingAcc) {
                         accStartingX = sensorEvent.values[0];
                         accStartingY = sensorEvent.values[1];
                         flagStartingAcc = true;
-                        Log.d(TAG, "Beginning: " + accStartingX + " | " + accStartingY);
+                        Log.d(TAG, "Beginning: X -> " + accStartingX + " | Y -> " + accStartingY);
                     }
-
-                    //Check if the orientation of the phone is correct. If so, begin grabbing punch
-                    if(flagStartingRot) {
+                    //Get the current command and run the respective method for listening to either
+                    //  up / down / straight
+                    if (command.equalsIgnoreCase("up") || command.equalsIgnoreCase("down"))
                         checkPunchY(sensorEvent.values[0], sensorEvent.values[1]);
-                        if (command.equalsIgnoreCase("straight")) {
-                            //Log.d(TAG2,sensorEvent.values[0]+"");
-                            //Log.d(TAG2,sensorEvent.values[1]+"");
-                            checkPunchX(sensorEvent.values[0], sensorEvent.values[1]);
-                        }
-
-                    }
-
-                    break;
-
-                //Get the orientation of the phone using X,Y,Z
-                case Sensor.TYPE_GAME_ROTATION_VECTOR:
-                    Log.d(TAG, "GEO: " + Arrays.toString(sensorEvent.values));
-                    getHandOrientation(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
-                    break;
-
-                case Sensor.TYPE_GYROSCOPE:
-                    Log.d(TAG, "GYRO: " + Arrays.toString(sensorEvent.values));
+                    if (command.equalsIgnoreCase("straight"))
+                        checkPunchX(sensorEvent.values[0], sensorEvent.values[1]);
                     break;
             }
         }
@@ -148,30 +119,21 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {}
 
+    //Determine whether or not the user is punching up or down
     public void checkPunchY(float accValueX, float accValueY) {
-        //determine if the user is punching up or down
+        //Command is UP. Check if the user is beginning to punch up
         if (arlValuesY.get(arlValuesY.size() - 1) > accStartingY + ACC_THRESHOLD) {
+            //Find the top y-value
             if (command.equalsIgnoreCase("up")) {
-      //          Log.d(TAG, "X-COORDS: " + accValueX);
-      //          Log.d(TAG, "Punching Up");
-                findTopSpeedY(accValueX, accValueY, command);
-            } else {
-      //          Log.d(TAG, "Incorrect: Not UP");
-                //           arlValuesY.clear();
+                findTopSpeedY(accValueX, accValueY);
             }
+        //Command is DOWN. Check if the user is beginning to punch down
         } else if (arlValuesY.get(arlValuesY.size() - 1) + ACC_THRESHOLD < accStartingY) {
             if (command.equalsIgnoreCase("down")) {
-      //          Log.d(TAG, "X-COORDS: " + accValueX);
-      //          Log.d(TAG, "Punching down");
-                findTopSpeedY(accValueX, accValueY, command);
-            } else {
-       //         Log.d(TAG, "Incorrect: Not DOWN");
-                //         arlValuesY.clear();
+                findTopSpeedY(accValueX, accValueY);
             }
-            //punching down
         } else {
             //not punching
-      //      Log.d(TAG, "Not punching");
             //clear the arraylist
             arlValuesY.clear();
         }
@@ -246,86 +208,157 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-
-    public void findTopSpeedY(float accValueX, float accValueY, String currentCommand) {
+    //Find and grab the top y-value from the accelerometer
+    public void findTopSpeedY(float accValueX, float accValueY) {
         //Command is up
         //Accelerometer should be increasing. Get top speed and once the
         //  Y-value is smaller, stop listening, send data to ScoreBoardActivity and
         //  swap activities
         //Threshold is set in order to give leeway to getting values instead of grabbing every
         //  value
-        if (command.equalsIgnoreCase("up")) {
+        if (command.equalsIgnoreCase("up") && accValueY > accStartingY + SENSOR_THRESHOLD) {
             if (topSpeed < accValueY && topSpeed >= 0) {
                 topSpeed = accValueY;
                 arlTempSpeeds.add(accValueX);
-   //             Log.d(TAG, "FASTER ----> " + topSpeed);
-            } else if (topSpeed - ACC_THRESHOLD > accValueY && topSpeed >= 0) {
+                //Log.d(TAG, "FASTER ----> " + topSpeed);
+            } else if (topSpeed - ACC_THRESHOLD + 1 > accValueY && topSpeed >= 0) {
+                //Temp list is utilized here to ensure that the user is NOT punching straight
                 float tempSum = 0;
-                for(int i = 0; i < arlTempSpeeds.size(); i++){
-                    tempSum+= arlTempSpeeds.get(i);
-                }
-                if(tempSum < 0){
-                    //Punching up was successful. Find top s[eed and check if there is a new command
-      //              Log.d(TAG, "SLOWER ----> " + accValueY);
-       //             Log.d(TAG, "TOTAL X: " + tempSum);
+                for (int i = 0; i < arlTempSpeeds.size(); i++)
+                    tempSum += arlTempSpeeds.get(i);
+
+                //Temp list size is utilized here to ensure if it's greater than the threshold, that
+                //  the user is NOT punching down
+                if (tempSum < 0 && arlTempSpeeds.size() > BUOYANCY_THRESHOLD) {
+                    //Punching up was successful and has ended.
+                    // Find top speed and check if there is a new command
+                        //Log.d(TAG, "SLOWER ----> " + accValueY);
+                        //Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
                     topSpeed -= accStartingY;
                     arlTopSpeeds.add(topSpeed);
-        //            Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
-                    //Stop Listening
+                    //Stop Listening and check for new commands
                     stopListening();
-                    timerActive = false;
-                    arlTempSpeeds.clear();
-                    //Send speed data and swap activities
+                    timerFinished = false;
+                    resetValues();
                     vibrate();
                     count++;
                     pickNewAction();
                 } else {
-                    arlTempSpeeds.clear();
-                    topSpeed = 0;
+                    resetValues();
                 }
+            } else {
+                resetValues();
             }
             //Command is down
         } else if (command.equalsIgnoreCase("down")) {
-   //         Log.d(TAG, "Checking: " + accValueY);
-            //Speed value is going down when punching down
+            //Speed value is going negative when punching down
             if (topSpeed - ACC_THRESHOLD > accValueY) {
                 topSpeed = accValueY;
                 arlTempSpeeds.add(topSpeed);
-     //           Log.d(TAG, "FASTER ----> " + topSpeed);
-                //Y-value is larger and speed is below 0. Essentially in negatives
+                //Log.d(TAG, "FASTER ----> " + topSpeed);
+             //Y-value is larger and speed should be below 0
             } else if (topSpeed < accValueY && topSpeed < 0) {
-                //Punching down was successful. Find top speed and check if there is a new command
-                if (arlTempSpeeds.size() >= BUOYANCY_THRESHOLD) {
-       //             Log.d(TAG, "SLOWER ----> " + accValueY);
-       //             Log.d(TAG, "Temps: " + arlTempSpeeds.size());
+                //Temp list size is here to ensure that the user is NOT punching up
+                if (arlTempSpeeds.size() > BUOYANCY_THRESHOLD) {
+                    //Punching down was successful and has ended.
+                    // Find top speed and check if there is a new command
+                        //Log.d(TAG, "SLOWER ----> " + accValueY);
+                        //Log.d(TAG, "Temps: " + arlTempSpeeds.size());
+                    //Convert to positive values
+                    if(accStartingY < 0)
+                        accStartingY += -1;
                     topSpeed *= -1;
                     topSpeed -= accStartingY;
+                    //TopSpeed is checked here to ensure that the user is NOT punching straight
+                    if (topSpeed > 0) {
+                        //Stop listening and check for new command
+                        arlTopSpeeds.add(topSpeed);
+                        stopListening();
+                        timerFinished = false;
+                        arlTempSpeeds.clear();
+                        vibrate();
+                        count++;
+                        pickNewAction();
+                    }
+                } else {
+                    resetValues();
+                }
+            } else {
+                resetValues();
+            }
+        }
+    }
+
+    //Grab and find the top X-value from the accelerometer
+    public void findTopSpeedX(float accValueX, float accValueY) {
+        //Command is straight
+        //Accelerometer should be increasing. Get top speed and once the
+        //  X-value is smaller, stop listening, send data to ScoreBoardActivity and
+        //  swap activities
+        //Threshold is set in order to give leeway to getting values instead of grabbing every
+        //  value
+
+        if (command.equalsIgnoreCase("straight")) {
+            //Start getting the top x-values
+            if (topSpeed < accValueX && topSpeed >= 0) {
+                topSpeed = accValueX;
+                arlTempSpeeds.add(accValueY);
+                //Log.d(TAG2, "FASTER ----> " + topSpeed);
+            //Begin slower speed process
+            } else if (topSpeed > accValueX + ACC_THRESHOLD && topSpeed >= 0) {
+                //TempSum is utilized here to ensure that the user is NOT punching up
+                float tempSum = 0;
+                for (int i = 0; i < arlTempSpeeds.size(); i++)
+                    tempSum += arlTempSpeeds.get(i);
+
+                //TempSpeed size is utilized here to ensure that the user is NOT punching down
+                if (tempSum > 0 && arlTempSpeeds.size() > BUOYANCY_THRESHOLD) {
+                    //Slows down. Get top speed
+                        //Log.d(TAG2, "SLOWER ----> " + accValueX);
+                        //Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
+                    topSpeed -= accStartingX;
                     arlTopSpeeds.add(topSpeed);
-        //            Log.d(TAG, "TOP SPEED: " + topSpeed + " | Start_Y: " + accStartingY);
-                    stopListening();
-                    timerActive = false;
-                    arlTempSpeeds.clear();
+                    //Stop Listening and check for new command
+                    sensorManager.unregisterListener(this);
+                    timerFinished = false;
+                    resetValues();
                     vibrate();
                     count++;
                     pickNewAction();
                 } else {
-                    arlTempSpeeds.clear();
-                    topSpeed = 0;
+                    resetValues();
                 }
+            } else {
+                resetValues();
             }
         }
-        //    arlValuesY.clear();
     }
 
+    //Check to ensure the current command is a straight punch
+    public void checkPunchX(float accValueX, float accValueY) {
+        //determine if the user is punching straight
+        if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD) {
+            if (command.equalsIgnoreCase("straight")) {
+                findTopSpeedX(accValueX, accValueY);
+            }
+        } else {
+            //not punching
+            //clear the arraylist
+            arlValuesX.clear();
+        }
+    }
+
+    //All commands have been completed. Find the top speed from the commands the user has done.
+    //  Send the top speed to the ScoreBoardActivity
     public void sendData() {
         SharedPreferences sharedPref = getSharedPreferences("Prefs", MODE_PRIVATE);
         SharedPreferences.Editor sharedEdit = sharedPref.edit();
 
         //Find the top acceleration from the list of punches
-        Log.d(TAG, "sendData: " + arlTopSpeeds);
+        Log.d(TAG, "ALL TOP SPEEDS: " + arlTopSpeeds);
         float topScore = 0;
-        for (int i = 0; i < arlTopSpeeds.size(); i++){
-            if(topScore < arlTopSpeeds.get(i))
+        for (int i = 0; i < arlTopSpeeds.size(); i++) {
+            if (topScore < arlTopSpeeds.get(i))
                 topScore = arlTopSpeeds.get(i);
         }
 
@@ -336,45 +369,48 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     //Start 3 second countdown
     public void startTimer() {
-            Timer timer = new Timer();
-            int[] arrColors = {Color.RED, Color.RED, Color.YELLOW, Color.GREEN};
-            TimerTask t = new TimerTask() {
-                //Initial countdown time
-                int COUNTDOWN = 3;
-                int i = 0;
-                @Override
-                public void run() {
-                    //Change countdown text
-                    runOnUiThread(() -> txtTimer.setText(COUNTDOWN + ""));
-                    COUNTDOWN--;
-                    //Change background color
-                    runOnUiThread(() -> txtLayout.setBackgroundColor(arrColors[i]));
-                    i++;
-                    //countdown is finished. Start tasks here
-                    if (COUNTDOWN == 0) {
-                        vibrate();
-                        timerActive = true;
-                        timer.cancel();
-                    }
+        Timer timer = new Timer();
+        int[] arrColors = {Color.RED, Color.RED, Color.YELLOW, Color.GREEN};
+        TimerTask t = new TimerTask() {
+            //Initial countdown time
+            int COUNTDOWN = 3;
+            int i = 0;
+
+            @Override
+            public void run() {
+                //Change countdown text
+                runOnUiThread(() -> txtTimer.setText(COUNTDOWN + ""));
+                COUNTDOWN--;
+                //Change background color
+                runOnUiThread(() -> txtLayout.setBackgroundColor(arrColors[i]));
+                i++;
+                //countdown is finished. Start tasks here
+                if (COUNTDOWN == 0) {
+                    vibrate();
+                    timerFinished = true;
+                    timer.cancel();
                 }
-            };
-            try {
-                //Start timer
-                timer.schedule(t, 1000L, 1000L);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        };
+        try {
+            //Start timer
+            timer.schedule(t, 1000L, 1000L);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void pickNewAction(){
+    //Get the next command or finish the game
+    public void pickNewAction() {
         //End game when the number of punches has reached the user set amount of punches
-        if(count == settings.MaxPunches){
+        if (count == settings.MaxPunches) {
             count = 0;
             //Send the top speed
             sendData();
             //Show dialog that the game has ended
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("All commands completed. Tap Next to View Results");
+            builder.setCancelable(false);
             builder.setPositiveButton("NEXT", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -387,32 +423,30 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             return;
         }
         //Continue game
-        if(previousText != null){
+        if (previousText != null) {
             txtLayout.setText(previousText);
         }
         // SHARED PREF FOR HAND GRIP //
         SharedPreferences sharedPref = getSharedPreferences("settingsPref", MODE_PRIVATE);
-        setImgHandGrip(sharedPref.getString("Orientation", "Right"));
         onStart();
-            previousText = txtLayout.getText().toString();
-            int randomAction  = (int) (Math.random() * settings.actions.size());
-            String[] actions = settings.actions.toArray(new String[0]);
-            tapAction = actions[randomAction];
-            Log.d("sfasfa1",tapAction);
-            if(tapAction.equals("checkUp")){
-                command = "up";
-                txtLayout.setText("Punch Up");
-            }
-            else if(tapAction.equals("checkDown")){
-                command = "down";
-                txtLayout.setText("Punch Down");
-            }
-            else if(tapAction.equals("checkStraight")) {
-                command = "straight";
-                txtLayout.setText("Punch Straight");
-            }
+        previousText = txtLayout.getText().toString();
+        int randomAction = (int) (Math.random() * settings.actions.size());
+        String[] actions = settings.actions.toArray(new String[0]);
+        tapAction = actions[randomAction];
+        Log.d("sfasfa1", tapAction);
+        if (tapAction.equals("checkUp")) {
+            command = "up";
+            txtLayout.setText("Punch Up");
+        } else if (tapAction.equals("checkDown")) {
+            command = "down";
+            txtLayout.setText("Punch Down");
+        } else if (tapAction.equals("checkStraight")) {
+            command = "straight";
+            txtLayout.setText("Punch Straight");
         }
+    }
 
+    //Set the vibration for the phone
     public void vibrate() {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -423,70 +457,26 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     }
 
     //Stop listening to sensors and set the timer to inactive
-    public void stopListening(){
+    public void stopListening() {
         sensorManager.unregisterListener(this);
-        timerActive = false;
+        timerFinished = false;
     }
 
     //Listen and register sensors
-    public void startListening(){
+    public void startListening() {
         sensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, geoSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_UI);
     }
 
-    //Set the imageView for the hand grip set by the user
-    public void setImgHandGrip(String strHandGrip){
-        if (strHandGrip.equalsIgnoreCase("left")) {
-            imgLeftGrip.setVisibility(View.VISIBLE);
-        } else if (strHandGrip.equalsIgnoreCase("right")) {
-            imgRightGrip.setVisibility(View.VISIBLE);
-        }
+    //Reset the temp Arraylist and top speed. One of three scenarios cause this to occur:
+    // 1) The user was unable to punch fast enough for the sensor to grab
+    // 2) The user was punching in the wrong direction
+    // 3) The punch was successful and the values need to be reset for the incoming command
+    public void resetValues() {
+        arlTempSpeeds.clear();
+        topSpeed = 0;
     }
 
-    //Find the orientation of the phone by comparing X,Y,Z values
-    public void getHandOrientation(float xValue, float yValue, float zValue){
-        //Left-hand orientation
-        // up: [+, +, +]  side: [+, +, -] flat: [+, -, +]
-        if((xValue > 0 && yValue > 0 && zValue > 0) ||
-                (xValue > 0 && yValue > 0 && zValue < 0) ||
-                (xValue > 0 && yValue < 0 && zValue > 0)){
-            currentHandGrip = "left";
-        }
 
-        //Right-hand orientation
-        // flat: [-, -, -]  side: [-, +, -] flat: [+, -, -]
-        else if((xValue < 0 && yValue < 0 && zValue < 0) ||
-                (xValue < 0 && yValue > 0 && zValue < 0) ||
-                ((xValue > 0 && yValue < 0 && zValue < 0))){
-            currentHandGrip = "right";
-        }
-        else
-            currentHandGrip = "";
-
-        Log.d(TAG, "getHandOrientation: " + currentHandGrip);
-        flagStartingRot = currentHandGrip.equalsIgnoreCase("left");
-
-        /*  KEEP SAKE - BUGS
-         //Left-hand orientation
-        // up: [+, -, -]  side/flat: [+, +, -]
-        if((xValue > 0 && yValue < 0 && zValue < 0) ||
-                (xValue > 0 && yValue > 0 && zValue < 0)){
-            currentHandGrip = "left";
-        }
-
-        //Right-hand orientation
-        // flat: [-, -, -]  side: [-, +, -] up: [+, +, +]
-        else if((xValue < 0 && yValue < 0 && zValue < 0) ||
-                (xValue < 0 && yValue > 0 && zValue < 0) ||
-                (xValue > 0 && yValue > 0 && zValue > 0)){
-            currentHandGrip = "right";
-        }
-        else
-            currentHandGrip = "";
-         */
-    }
-    
     @Override
     protected void onStart() {
         super.onStart();
@@ -500,10 +490,5 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         super.onStop();
         //Stop listening for sensors
         stopListening();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
     }
 }
