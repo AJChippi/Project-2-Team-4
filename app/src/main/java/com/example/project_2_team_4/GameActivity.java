@@ -31,10 +31,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class GameActivity extends AppCompatActivity implements SensorEventListener {
-        //  Views  //
+    //  Views  //
     TextView txtLayout;
     TextView txtTimer;
-        //  Variables  //
+    //  Variables  //
     //  Constants  //
     //  Arbitrary values that adds a threshold on when to start listening for sensor events
     int ACC_THRESHOLD = 1;
@@ -136,55 +136,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             //not punching
             //clear the arraylist
             arlValuesY.clear();
-        }
-    }
-    public void findTopSpeedX(float accValueX, float accValueY, String currentCommand) {
-        //Command is straight
-        //Accelerometer should be decreasing. Get top speed and once the
-        //  X-value is greater, stop listening, send data to ScoreBoardActivity and
-        //  swap activities
-
-        Log.d(TAG2, "Defaults: " + topSpeed + " | " + arlTempSpeeds.size());
-        if (command.equalsIgnoreCase("straight")) {
-            if (topSpeed < accValueX && topSpeed >= 0) {//if the top speed is less then the current set that to top speed
-                topSpeed = accValueX;
-                arlTempSpeeds.add(accValueY);//helps determine if punch is up or down
-                //      Log.d(TAG2, "FASTER ----> " + topSpeed);
-                //      Log.d(TAG2, "Current Y-value: " + accValueY);
-            } else if (topSpeed > accValueX + 2 && topSpeed >= 0) {//if it is not greater see if the user is punching up or down
-                float tempSum = 0;
-                for (int i = 0; i < arlTempSpeeds.size(); i++)
-                    tempSum += arlTempSpeeds.get(i);
-
-                Log.d(TAG2, "SUM Y: " + tempSum);
-                if (tempSum > 0 && arlTempSpeeds.size() > 5) {
-                    Log.d(TAG2, "COUNT: " + arlTempSpeeds.size());
-                    //Slows down. Get top speed
-                    Log.d(TAG2, "SLOWER ----> " + accValueX);
-                    //     Log.d(TAG2, "TOTAL X: " + topSpeed);
-                    topSpeed -= accStartingX;
-                    arlTopSpeeds.add(topSpeed);
-                    Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
-                    //Stop Listening
-                    sensorManager.unregisterListener(this);
-                    timerFinished = false;
-                    arlTempSpeeds.clear();
-                    topSpeed = 0;
-                    //arlTempSpeeds.clear();
-                    //Send speed data and swap activities
-                    vibrate();
-                    count++;
-                    pickNewAction();
-                } else {
-                    Log.d(TAG2, "findTopSpeedX: Check 1");
-                    arlTempSpeeds.clear();
-                    topSpeed = 0;
-                }
-            } else {
-                Log.d(TAG2, "findTopSpeedX: Check 2");
-                arlTempSpeeds.clear();
-                topSpeed = 0;
-            }
         }
     }
 
