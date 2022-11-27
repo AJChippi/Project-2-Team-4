@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 public class SettingsActivity extends AppCompatActivity {
     TextView txtSeek;
-    RadioGroup radioGroup;
     CheckBox checkUp, checkDown, checkStraight;
     SeekBar seekBar;
     String selectedHand;
@@ -32,7 +31,6 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         txtSeek = findViewById(R.id.txtSeek);
-        radioGroup = findViewById(R.id.radioGroup);
         btnSave = findViewById(R.id.btnSave);
         btnBack2Main = findViewById(R.id.btnBack2Menu);
         seekBar = findViewById(R.id.seekBar);
@@ -47,7 +45,6 @@ public class SettingsActivity extends AppCompatActivity {
         seekBar.setProgress(sharedPref.getInt("punches", 10));
         Orientation = sharedPref.getString("Orientation", "Right");
         booleanRight = sharedPref.getBoolean("radioGroup", true);
-        radioGroup.check(sharedPref.getBoolean("radioGroup", true) ? R.id.radioButton : R.id.radioButton2);
         txtSeek.setText(String.valueOf(seekBar.getProgress()));
 
 
@@ -64,19 +61,6 @@ public class SettingsActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
-
-
-        radioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
-            RadioButton rdoChecked = findViewById(i);
-            selectedHand = String.valueOf(rdoChecked.getText());
-
-            if (selectedHand.equals("Right Handed")) {
-                Orientation = "Right";
-            } else if (selectedHand.equals("Left Handed")) {
-                Orientation = "Left";
-            }
-        });
-
 
         btnSave.setOnClickListener(v -> {
             if(checkSelectionExists()==true){

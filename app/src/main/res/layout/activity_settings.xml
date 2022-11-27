@@ -28,24 +28,15 @@
         app:layout_constraintTop_toBottomOf="@+id/txtSettings" />
 
     <TextView
-        android:id="@+id/txtNoOfPunches2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
-        android:text="Choose Hand Orientation"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches" />
-
-    <TextView
         android:id="@+id/txtNoOfPunches3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:text="Select Directions"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches"
+        app:layout_goneMarginTop="16dp" />
 
     <Button
         android:id="@+id/btnSave"
@@ -89,29 +80,6 @@
         android:text="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/txtNoOfPunches" />
-
-    <RadioGroup
-        android:id="@+id/radioGroup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtNoOfPunches2">
-
-        <RadioButton
-            android:id="@+id/radioButton2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Left Handed"
-            android:textColor="@android:color/secondary_text_light" />
-
-        <RadioButton
-            android:id="@+id/radioButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Right Handed" />
-    </RadioGroup>
 
     <CheckBox
         android:id="@+id/checkUp"

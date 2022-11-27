@@ -167,7 +167,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     Log.d(TAG2, "TOP SPEED: " + topSpeed + " | Start_X: " + accStartingX);
                     //Stop Listening
                     sensorManager.unregisterListener(this);
-                    timerActive = false;
+                    timerFinished = false;
                     arlTempSpeeds.clear();
                     topSpeed = 0;
                     //arlTempSpeeds.clear();
@@ -185,26 +185,6 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 arlTempSpeeds.clear();
                 topSpeed = 0;
             }
-        }
-    }
-    public void checkPunchX(float accValueX, float accValueY) {
-        //determine if the user is punching straight if it is send it to find the top speed
-
-        if (arlValuesX.get(arlValuesX.size() - 1) > accStartingX + ACC_THRESHOLD) {
-            if (command.equalsIgnoreCase("straight")) {
-                Log.d(TAG2, "X-COORDS: " + accValueX);
-                Log.d(TAG2, "Punching Straight");
-                findTopSpeedX(accValueX, accValueY, command);
-
-            } else {
-                Log.d(TAG2, "Incorrect: Not Straight");
-                //           arlValuesY.clear();
-            }
-        } else {
-            //not punching
-            //Log.d(TAG2, "Not punching");
-            //clear the arraylist
-            arlValuesX.clear();
         }
     }
 
